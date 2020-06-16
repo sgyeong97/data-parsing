@@ -2,7 +2,7 @@ import exifread
 import sys
 import cv2
 import os
-import numpy as np
+import numpy as np #필요없음
 from os import listdir
 from os.path import isfile, join
 
