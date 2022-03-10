@@ -1,0 +1,156 @@
+import os
+import xml.etree.ElementTree
+import cv2
+import shutil
+import time
+import numpy as np
+import pandas as pd
+from pandas import DataFrame
+from bs4 import BeautifulSoup
+
+target_path = 'D:\신지영_업무\\0709_어트리뷰트인수인계\\attribute_crop_images\\common\Train'
+target_file = 'D:\신지영_업무\\0709_어트리뷰트인수인계\\attribute_crop_images\\common\\file_list.txt'
+result_path = 'D:\신지영_업무\\0709_어트리뷰트인수인계\\attribute_crop_images\\common'
+
+start = time.time()
+
+man = 0
+woman = 0
+genderdk = 0
+infant = 0
+child = 0
+teenager = 0
+adult = 0
+oldperson = 0
+backpack = 0
+totebag = 0
+shoulderbag = 0
+plasticbag = 0
+bagdk = 0
+bagnone = 0
+red = 0
+yellow = 0
+green = 0
+blue = 0
+brown = 0
+pink = 0
+gray = 0
+black = 0
+white = 0
+unknown = 0
+
+xml_count = 0
+
+xml_list = []
+
+def split_label(label):
+    temp = str(label)
+    temp0 = temp.split('<')
+    temp1, result = temp0[1].split('>')
+    return result
+
+
+def split_name(name):
+    temp = str(name)
+    try:
+        temp0 = temp.split("\"")
+        result = temp0[1]
+    except:
+        return False
+    return result
+
+name_list = []
+file = open(target_file, 'r')
+while True:
+    line = file.readline()
+    if not line: break
+    temp = line.split('\n')
+    path = os.path.join(target_path, temp[0]+'.xml')
+    name_list.append(path)
+file.close()
+
+print("xml을 읽어 속성 값 count 시작")
+for xml in name_list:
+    if xml.endswith('xml'):
+        xml_path = os.path.join(target_path, xml)
+        file = open(xml_path, 'r', encoding='utf-8')
+        lines = ''
+        while True:
+            line = file.readline()
+            if not line: break
+            lines += line
+        file.close()
+        bs = BeautifulSoup(lines, 'lxml')
+        for box in bs.find_all('box'):
+            label = 'head'
+            lines = str(box).splitlines()
+            for x in lines[1:]:
+                result = split_label(x)
+                if result != 'false':
+                    label_name = split_name(x)
+                    if label_name == 'gender':
+                        if result == 'male':
+                            man += 1
+                        elif result == 'female':
+                            woman += 1
+                        else:
+                            genderdk += 1
+                    elif label_name == 'age':
+                        if result == '8~13':
+                            child += 1
+                        elif result == '14~19':
+                            teenager += 1
+                        elif result == '20~70':
+                            adult += 1
+                        elif result == '70~':
+                            oldperson += 1
+                        else:
+                            infant += 1
+                    else:
+                        if label_name == 'backpack':
+                            backpack += 1
+                        elif label_name == 'bagless':
+                            bagnone += 1
+                        elif label_name == 'unknown_bag':
+                            bagdk += 1
+                        elif label_name == 'plasticbag':
+                            plasticbag += 1
+                        elif label_name == 'shoulderbag':
+                            shoulderbag += 1
+                        elif label_name == 'handbag':
+                            totebag += 1
+                        elif label_name == 'bag_red':
+                            red += 1
+                        elif label_name == 'bag_yellow':
+                            yellow += 1
+                        elif label_name == 'bag_green':
+                            green += 1
+                        elif label_name == 'bag_blue':
+                            blue += 1
+                        elif label_name == 'bag_brown':
+                            brown += 1
+                        elif label_name == 'bag_pink':
+                            pink += 1
+                        elif label_name == 'bag_grey':
+                            gray += 1
+                        elif label_name == 'bag_black':
+                            black += 1
+                        elif label_name == 'bag_white':
+                            white += 1
+                        elif label_name == 'bag_color_unknown':
+                            unknown += 1
+
+
+total_list = [man, woman, genderdk, infant, child, teenager, adult, oldperson, backpack, totebag, shoulderbag, plasticbag, bagdk, bagnone, red, yellow, green, blue, brown, pink, gray, black, white, unknown]
+total_name_list = ["man", "woman", "genderdk", "infant", "child", "teenager", "adult", "oldperson", "backpack", "totebag", "shoulderbag", "plasticbag", "bagdk", "bagnone", "red", "yellow", "green", "blue", "brown", "pink", "gray", "black", "white", "unknown"]
+
+df = pd.DataFrame(
+    {
+        "COUNT" : total_list
+    },index=total_name_list
+)
+
+txt_file = os.path.join(result_path, 'common_result.xlsx')
+df.to_excel(txt_file)
+
+print(time.time() - start)
